@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://dubbo.apache.org/schema/dubbo" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd        http://dubbo.apache.org/schema/dubbo        http://dubbo.apache.org/schema/dubbo/dubbo.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 扫描包配置 -->
+    <context:component-scan base-package="com.lemon.service.impl"></context:component-scan>
+    
+    <!-- 消费方应用名，用于计算依赖关系，不是匹配条件，不要与提供方一样 -->
+    <dubbo:application name="order-service-consumer"/>
+
+    <!-- 使用multicast广播注册中心暴露发现服务地址 -->
+    <dubbo:registry address="zookeeper://127.0.0.1:2181"/>
+
+    <!-- 生成远程服务代理，可以和本地bean一样使用demoService -->
+    <!-- check：启动消费者检查是否存在需要的服务提供者，默认true，设置为false，启动消费者不检查，当需要消费时才检查是否存在服务提供者  -->
+    <!-- timout:超时时间，为了快速响应，默认1000毫秒超时 -->
+    <!-- retries:如果调用远程服务失败，重试次数
+         设置重试规则：
+            1、幂等（设置重试次数）【查询、删除、修改】
+            2、非幂等（不能设置重试次数）【新增】
+    -->
+    <!-- 灰度发布： 属性version指定版本，不指定随机调用提供服务者  -->
+    <dubbo:reference version="*" retries="3" id="userService"
+                     stub="com.lemon.service.impl.UserServiceStub"
+                     interface="com.lemon.service.UserService" >
+        <!-- 针对某个方法设置超时时间  -->
+<!--        <dubbo:method name="getUserAddressList" timeout="0"></dubbo:method>-->
+    </dubbo:reference>
+
+    <!--  配置当前消费者统一规则：所有服务都不检查  -->
+    <dubbo:consumer check="false" timeout="1000"></dubbo:consumer>
+
+</beans>
